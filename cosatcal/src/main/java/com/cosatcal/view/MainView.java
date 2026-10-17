@@ -1,7 +1,6 @@
 package com.cosatcal.view;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -10,47 +9,76 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class MainView extends BorderPane {
 
-    private final InputPanel inputPanel = new InputPanel();
-    private final ResultPanel resultPanel = new ResultPanel();
-    private final Button reloadButton = new Button("Ricarica dati");
+  private final InputPanel inputPanel = new InputPanel();
+  private final ResultPanel resultPanel = new ResultPanel();
+  private final Button reloadButton = new Button("Ricarica dati");
 
-    public MainView() {
-        getStyleClass().add("root-pane");
-        setTop(buildHeader());
+  private double dragOffsetX;
+  private double dragOffsetY;
 
-        HBox body = new HBox(20, inputPanel, resultPanel);
-        HBox.setHgrow(resultPanel, Priority.ALWAYS);
-        body.setPadding(new Insets(16, 24, 24, 24));
-        setCenter(body);
+  public MainView() {
+    getStyleClass().add("root-pane");
+    setTop(buildHeader());
 
-        // Temporary: remove when the controller feeds real data
-        inputPanel.showSampleData();
-        resultPanel.showSampleData();
-    }
+    HBox body = new HBox(10, inputPanel, resultPanel);
+    HBox.setHgrow(resultPanel, Priority.ALWAYS);
+    body.setPadding(new Insets(10));
+    setCenter(body);
 
-    private HBox buildHeader() {
-        Label title = new Label("CosatCal");
-        title.getStyleClass().add("app-title");
+    // Temporary: remove when the controller feeds real data
+    // inputPanel.showSampleData();
+    // resultPanel.showSampleData();
+  }
 
-        Label date = new Label(LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm")));
-        date.getStyleClass().add("header-date");
+  private HBox buildHeader() {
+    Label title = new Label("CosatCal");
+    title.getStyleClass().add("app-title");
 
-        reloadButton.getStyleClass().add("ghost-button");
+    reloadButton.getStyleClass().add("ghost-button");
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+    Button minimizeButton = new Button("–");
+    minimizeButton.getStyleClass().add("window-button");
+    minimizeButton.setOnAction(e -> ((Stage) getScene().getWindow()).setIconified(true));
 
-        HBox header = new HBox(18, title, spacer, date, reloadButton);
-        header.getStyleClass().add("header");
-        header.setAlignment(Pos.CENTER_LEFT);
-        return header;
-    }
+    Button closeButton = new Button("✕");
+    closeButton.getStyleClass().addAll("window-button", "close-button");
+    closeButton.setOnAction(e -> Platform.exit());
 
-    public InputPanel inputPanel() { return inputPanel; }
-    public ResultPanel resultPanel() { return resultPanel; }
-    public Button reloadButton() { return reloadButton; }
+    Region spacer = new Region();
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+    HBox header = new HBox(8, title, spacer, reloadButton, minimizeButton, closeButton);
+    header.getStyleClass().add("header");
+    header.setAlignment(Pos.CENTER_LEFT);
+
+    // Arrastrar la ventana desde el header
+    header.setOnMousePressed(e -> {
+      dragOffsetX = e.getSceneX();
+      dragOffsetY = e.getSceneY();
+    });
+    header.setOnMouseDragged(e -> {
+      Window window = getScene().getWindow();
+      window.setX(e.getScreenX() - dragOffsetX);
+      window.setY(e.getScreenY() - dragOffsetY);
+    });
+
+    return header;
+  }
+
+  public InputPanel inputPanel() {
+    return inputPanel;
+  }
+
+  public ResultPanel resultPanel() {
+    return resultPanel;
+  }
+
+  public Button reloadButton() {
+    return reloadButton;
+  }
 }
