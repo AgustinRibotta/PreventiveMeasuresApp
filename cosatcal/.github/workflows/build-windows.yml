@@ -1,0 +1,38 @@
+name: Build Windows
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build jar (runs the tests)
+        run: mvn -B clean package
+
+      - name: Package app with jpackage
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path input | Out-Null
+          Copy-Item target/cosatcal-1.0-SNAPSHOT.jar input/
+          jpackage --type app-image --name CosatCal `
+            --input input --main-jar cosatcal-1.0-SNAPSHOT.jar `
+            --main-class com.cosatcal.Launcher --dest dist
+          Copy-Item CosatCal_dati.xlsx dist/CosatCal/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CosatCal-windows
+          path: dist/CosatCal
+          retention-days: 30

@@ -10,6 +10,8 @@ import javafx.stage.Stage;
 
 public class App extends Application {
 
+  private static final String EXCEL_NAME = "CosatCal_dati.xlsx";
+
   @Override
   public void start(Stage stage) {
     MainView view = new MainView();
@@ -21,8 +23,17 @@ public class App extends Application {
     stage.show();
 
     // Created after show() so an error on the first load can display its alert
-    Path file = Path.of("CosatCal_dati.xlsx");
-    new MainController(view, new ExcelRepository(file), file.getFileName().toString());
+    new MainController(view, new ExcelRepository(excelPath()), EXCEL_NAME);
+  }
+
+  /**
+   * Packaged app: the Excel sits next to CosatCal.exe.
+   * Run from Maven: the Excel is in the project folder, as before.
+   */
+  private static Path excelPath() {
+    String appPath = System.getProperty("jpackage.app-path");
+    Path folder = appPath != null ? Path.of(appPath).getParent() : Path.of(".");
+    return folder.resolve(EXCEL_NAME);
   }
 
   public static void main(String[] args) {
