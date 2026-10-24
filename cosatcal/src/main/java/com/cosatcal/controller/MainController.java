@@ -26,8 +26,11 @@ public class MainController {
   private static final String MSG_NO_PRICE = "Nessun prezzo per questo materiale.";
   private static final String MSG_NO_WEIGHT = "Nessun peso (kg/m²) per questo spessore.";
   private static final String MSG_NO_GAS = "Nessun consumo di gas per questo spessore.";
+  private static final String MSG_NOTHING_TO_CALCULATE = "Inserisci lunghezza e larghezza, il tempo di taglio, o tutti e tre.";
 
   private static final String NOT_AVAILABLE = "n/d";
+  private static final String DASH = "—";
+  private static final String EXCLUDED_TEXT = "Non incluso in questo calcolo";
 
   private final MainView view;
   private final InputPanel input;
@@ -141,6 +144,13 @@ public class MainController {
         throw new IllegalArgumentException(MSG_NOT_LOADED);
       }
 
+      // What was filled in decides what is calculated
+      boolean withMaterial = isFilled(input.lengthField()) || isFilled(input.widthField());
+      boolean withMachine = isFilled(input.cuttingTimeField());
+      if (!withMaterial && !withMachine) {
+        throw new IllegalArgumentException(MSG_NOTHING_TO_CALCULATE);
+      }
+
       String materialName = input.materialCombo().getValue();
       Thickness thickness = selectedThickness();
       if (materialName == null || thickness == null) {
@@ -149,32 +159,38 @@ public class MainController {
 
       // Price typed by the user, or the Excel one if the field was left untouched
       double price = input.materialCosts().getOrDefault(materialName, 0.0);
-      if (price <= 0) {
-        throw new IllegalArgumentException(MSG_NO_PRICE);
+      if (withMaterial) {
+        if (price <= 0) {
+          throw new IllegalArgumentException(MSG_NO_PRICE);
+        }
+        if (Double.isNaN(thickness.weightKgM2())) {
+          throw new IllegalArgumentException(MSG_NO_WEIGHT);
+        }
       }
-      if (Double.isNaN(thickness.weightKgM2())) {
-        throw new IllegalArgumentException(MSG_NO_WEIGHT);
-      }
-      if (Double.isNaN(thickness.gasConsumptionM3h())) {
+      if (withMachine && Double.isNaN(thickness.gasConsumptionM3h())) {
         throw new IllegalArgumentException(MSG_NO_GAS);
       }
 
+      // If only one of length/width is filled, required() reports the missing one
       Part part = new Part(
-          required(input.lengthField(), "Lunghezza"),
-          required(input.widthField(), "Larghezza"),
-          optional(input.netAreaField(), "Area netta"),
-          required(input.cuttingTimeField(), "Tempo di taglio"));
+          withMaterial ? required(input.lengthField(), "Lunghezza") : Double.NaN,
+          withMaterial ? required(input.widthField(), "Larghezza") : Double.NaN,
+          withMaterial ? optional(input.netAreaField(), "Area netta") : Double.NaN,
+          withMachine ? required(input.cuttingTimeField(), "Tempo di taglio") : Double.NaN);
 
+      // Only the parameters of what is calculated are required
       Parameters params = new Parameters(
-          required(input.extraSfridoField(), "Extra sfrido"),
-          required(input.extraMaterialField(), "Extra materiale"),
-          required(input.extraGasField(), "Extra gas"),
-          BigDecimal.valueOf(required(input.machineCostField(), "Costo macchina")),
-          BigDecimal.valueOf(required(input.packageCostField(), "Costo per pacco")),
+          withMaterial ? required(input.extraSfridoField(), "Extra sfrido") : 0,
+          withMaterial ? required(input.extraMaterialField(), "Extra materiale") : 0,
+          withMachine ? required(input.extraGasField(), "Extra gas") : 0,
+          BigDecimal.valueOf(
+              withMachine ? required(input.machineCostField(), "Costo macchina") : 0),
+          BigDecimal.valueOf(
+              withMachine ? required(input.packageCostField(), "Costo per pacco") : 0),
           repository.parameters().gasPackM3()); // m³ of the pack come from the Excel only
 
-      CostResult r = CostCalculator.calculate(part, params, thickness, price);
-      show(r, params, materialName, price);
+      CostResult r = CostCalculator.calculate(part, params, thickness, price, withMaterial, withMachine);
+      show(r, params, withMaterial, withMachine, materialName, price);
 
     } catch (IllegalArgumentException e) {
       showError(e.getMessage());
@@ -183,22 +199,35 @@ public class MainController {
 
   // ---------- Showing results ----------
 
-  private void show(CostResult r, Parameters p, String materialName, double price) {
+  private void show(CostResult r, Parameters p, boolean withMaterial, boolean withMachine,
+      String materialName, double price) {
+
     result.setTotal(money(r.total()));
 
-    result.setMaterial(
-        "Peso " + weight(r.grossScrapWeightKg()) + " (lungh. × largh. + sfrido "
-            + plain(p.scrapPct()) + "%) · ricarico " + plain(p.materialMarkupPct()) + "%",
-        money(r.finalMaterialCost()));
-    result.setMachine(
-        plain(r.cuttingTimeMin()) + " min × " + plain(p.machineCostPerHourEur().doubleValue())
-            + " €/h",
-        money(r.machineCost()));
-    result.setGas(
-        plain(r.cuttingTimeMin()) + " min × " + money(r.gasHourlyCost()) + "/h · ricarico "
-            + plain(p.gasMarkupPct()) + "%",
-        money(r.gasMarkedUpCost()));
+    if (withMaterial) {
+      result.setMaterial(
+          "Peso " + weight(r.grossScrapWeightKg()) + " (lungh. × largh. + sfrido "
+              + plain(p.scrapPct()) + "%) · ricarico " + plain(p.materialMarkupPct()) + "%",
+          money(r.finalMaterialCost()));
+    } else {
+      result.setMaterial(EXCLUDED_TEXT, DASH);
+    }
 
+    if (withMachine) {
+      result.setMachine(
+          plain(r.cuttingTimeMin()) + " min × "
+              + plain(p.machineCostPerHourEur().doubleValue()) + " €/h",
+          money(r.machineCost()));
+      result.setGas(
+          plain(r.cuttingTimeMin()) + " min × " + money(r.gasHourlyCost()) + "/h · ricarico "
+              + plain(p.gasMarkupPct()) + "%",
+          money(r.gasMarkedUpCost()));
+    } else {
+      result.setMachine(EXCLUDED_TEXT, DASH);
+      result.setGas(EXCLUDED_TEXT, DASH);
+    }
+
+    // Values that were not calculated show as "—"
     result.setDetail("netWeight", weight(r.netWeightKg()));
     result.setDetail("netCost", money(r.netCost()));
     result.setDetail("grossWeight", weight(r.grossWeightKg()));
@@ -207,14 +236,18 @@ public class MainController {
     result.setDetail("grossScrapCost", money(r.grossScrapCost()));
     result.setDetail("grossMarkedUpCost", money(r.grossMarkedUpCost()));
     result.setDetail("finalMaterialCost", money(r.finalMaterialCost()));
-    result.setDetail("cuttingTime", plain(r.cuttingTimeMin()) + " min");
+    result.setDetail("cuttingTime",
+        Double.isNaN(r.cuttingTimeMin()) ? DASH : plain(r.cuttingTimeMin()) + " min");
     result.setDetail("machineCost", money(r.machineCost()));
     result.setDetail("gas", money(r.gasCost()));
     result.setDetail("gasMarkedUp", money(r.gasMarkedUpCost()));
 
-    result.setSource(isPriceModified(materialName, price)
+    String origin = withMaterial && isPriceModified(materialName, price)
         ? "Calcolo con costo modificato manualmente"
-        : "Dati letti da " + sourceName);
+        : "Dati letti da " + sourceName;
+    String scope = withMaterial && withMachine ? ""
+        : (withMaterial ? "Solo materiale · " : "Solo macchina e gas · ");
+    result.setSource(scope + origin);
   }
 
   private boolean isPriceModified(String materialName, double price) {
@@ -227,6 +260,10 @@ public class MainController {
   }
 
   // ---------- Helpers ----------
+
+  private static boolean isFilled(TextField field) {
+    return field.getText() != null && !field.getText().isBlank();
+  }
 
   /** Reads a mandatory number. Accepts "1,5" and "1.5". */
   private static double required(TextField field, String name) {
@@ -253,11 +290,11 @@ public class MainController {
   }
 
   private static String money(double value) {
-    return String.format(Locale.ITALY, "%.2f €", value);
+    return Double.isNaN(value) ? DASH : String.format(Locale.ITALY, "%.2f €", value);
   }
 
   private static String weight(double value) {
-    return Double.isNaN(value) ? NOT_AVAILABLE : String.format(Locale.ITALY, "%.3f kg", value);
+    return Double.isNaN(value) ? DASH : String.format(Locale.ITALY, "%.3f kg", value);
   }
 
   private void showError(String message) {
