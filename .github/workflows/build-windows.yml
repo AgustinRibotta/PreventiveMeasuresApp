@@ -13,9 +13,9 @@ jobs:
       run:
         working-directory: cosatcal # the project lives in this subfolder
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -35,7 +35,7 @@ jobs:
             --main-class com.cosatcal.Launcher --dest dist
           Copy-Item CosatCal_dati.xlsx dist/CosatCal/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: CosatCal-windows
           path: cosatcal/dist/CosatCal
