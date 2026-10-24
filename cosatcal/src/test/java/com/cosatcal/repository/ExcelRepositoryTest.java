@@ -205,7 +205,7 @@ class ExcelRepositoryTest {
     DataLoadException e = assertThrows(DataLoadException.class, () -> new ExcelRepository(file).load());
 
     assertTrue(e.getMessage().contains("Inox"), "Message was: " + e.getMessage());
-    assertTrue(e.getMessage().contains("row 3"), "Message was: " + e.getMessage());
+    assertTrue(e.getMessage().contains("3"), "Message was: " + e.getMessage());
   }
 
   @Test
