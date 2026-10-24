@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: cosatcal # the project lives in this subfolder
     steps:
       - uses: actions/checkout@v4
 
@@ -17,6 +20,7 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+          cache-dependency-path: cosatcal/pom.xml
 
       - name: Build jar (runs the tests)
         run: mvn -B clean package
@@ -34,5 +38,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: CosatCal-windows
-          path: dist/CosatCal
+          path: cosatcal/dist/CosatCal
           retention-days: 30
