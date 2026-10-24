@@ -15,6 +15,7 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.ScrollPane;
 
 public class InputPanel extends VBox {
 
@@ -82,8 +83,8 @@ public class InputPanel extends VBox {
         costsGrid);
     parametersContent.setPadding(new Insets(10));
 
-    Tab materialTab = new Tab("MATERIALE", materialContent);
-    Tab parametersTab = new Tab("PARAMETRI", parametersContent);
+    Tab materialTab = new Tab("MATERIALE", scrollable(materialContent));
+    Tab parametersTab = new Tab("PARAMETRI", scrollable(parametersContent));
 
     TabPane tabPane = new TabPane(materialTab, parametersTab);
     tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -191,6 +192,15 @@ public class InputPanel extends VBox {
     widthField.setText("20");
     netAreaField.setText("2430");
     cuttingTimeField.setText("1,5");
+  }
+
+  /** Wraps a tab's content so it scrolls vertically when it does not fit. */
+  private ScrollPane scrollable(Node content) {
+    ScrollPane scroll = new ScrollPane(content);
+    scroll.setFitToWidth(true);
+    scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+    scroll.getStyleClass().add("transparent-scroll");
+    return scroll;
   }
 
   // ---------- Accesores ----------

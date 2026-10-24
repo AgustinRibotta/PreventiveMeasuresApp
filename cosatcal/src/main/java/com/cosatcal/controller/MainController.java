@@ -190,7 +190,7 @@ public class MainController {
           repository.parameters().gasPackM3()); // m³ of the pack come from the Excel only
 
       CostResult r = CostCalculator.calculate(part, params, thickness, price, withMaterial, withMachine);
-      show(r, params, withMaterial, withMachine, materialName, price);
+      show(r, params, withMaterial, withMachine, materialName, thickness, price);
 
     } catch (IllegalArgumentException e) {
       showError(e.getMessage());
@@ -200,13 +200,14 @@ public class MainController {
   // ---------- Showing results ----------
 
   private void show(CostResult r, Parameters p, boolean withMaterial, boolean withMachine,
-      String materialName, double price) {
+      String materialName, Thickness thickness, double price) {
 
     result.setTotal(money(r.total()));
 
     if (withMaterial) {
       result.setMaterial(
-          "Peso " + weight(r.grossScrapWeightKg()) + " (lungh. × largh. + sfrido "
+          materialName + " " + plain(thickness.thicknessMm()) + " mm · " + money(price) + "/kg\n"
+              + "Peso " + weight(r.grossScrapWeightKg()) + " (lungh. × largh. + sfrido "
               + plain(p.scrapPct()) + "%) · ricarico " + plain(p.materialMarkupPct()) + "%",
           money(r.finalMaterialCost()));
     } else {
