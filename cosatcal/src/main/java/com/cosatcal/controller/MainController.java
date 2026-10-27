@@ -20,7 +20,7 @@ import javafx.scene.control.TextField;
 
 public class MainController {
 
-  // Messages shown to the user
+  // Errors message
   private static final String MSG_NOT_LOADED = "I dati non sono stati caricati.";
   private static final String MSG_SELECT = "Seleziona materiale e spessore.";
   private static final String MSG_NO_PRICE = "Nessun prezzo per questo materiale.";
@@ -28,10 +28,12 @@ public class MainController {
   private static final String MSG_NO_GAS = "Nessun consumo di gas per questo spessore.";
   private static final String MSG_NOTHING_TO_CALCULATE = "Inserisci lunghezza e larghezza, il tempo di taglio, o tutti e tre.";
 
+  // Missing parameters
   private static final String NOT_AVAILABLE = "n/d";
   private static final String DASH = "—";
   private static final String EXCLUDED_TEXT = "Non incluso in questo calcolo";
 
+  // Views and input
   private final MainView view;
   private final InputPanel input;
   private final ResultPanel result;
@@ -55,11 +57,6 @@ public class MainController {
     reload();
   }
 
-  // ---------- Loading ----------
-
-  /**
-   * Reads the Excel again and refills the panel. On error the old data is kept.
-   */
   private void reload() {
     try {
       repository.load();
@@ -136,15 +133,12 @@ public class MainController {
     return null;
   }
 
-  // ---------- Calculation ----------
-
   private void calculate() {
     try {
       if (!loaded) {
         throw new IllegalArgumentException(MSG_NOT_LOADED);
       }
 
-      // What was filled in decides what is calculated
       boolean withMaterial = isFilled(input.lengthField()) || isFilled(input.widthField());
       boolean withMachine = isFilled(input.cuttingTimeField());
       if (!withMaterial && !withMachine) {
@@ -157,7 +151,6 @@ public class MainController {
         throw new IllegalArgumentException(MSG_SELECT);
       }
 
-      // Price typed by the user, or the Excel one if the field was left untouched
       double price = input.materialCosts().getOrDefault(materialName, 0.0);
       if (withMaterial) {
         if (price <= 0) {
@@ -171,14 +164,12 @@ public class MainController {
         throw new IllegalArgumentException(MSG_NO_GAS);
       }
 
-      // If only one of length/width is filled, required() reports the missing one
       Part part = new Part(
           withMaterial ? required(input.lengthField(), "Lunghezza") : Double.NaN,
           withMaterial ? required(input.widthField(), "Larghezza") : Double.NaN,
           withMaterial ? optional(input.netAreaField(), "Area netta") : Double.NaN,
           withMachine ? required(input.cuttingTimeField(), "Tempo di taglio") : Double.NaN);
 
-      // Only the parameters of what is calculated are required
       Parameters params = new Parameters(
           withMaterial ? required(input.extraSfridoField(), "Extra sfrido") : 0,
           withMaterial ? required(input.extraMaterialField(), "Extra materiale") : 0,
@@ -196,8 +187,6 @@ public class MainController {
       showError(e.getMessage());
     }
   }
-
-  // ---------- Showing results ----------
 
   private void show(CostResult r, Parameters p, boolean withMaterial, boolean withMachine,
       String materialName, Thickness thickness, double price) {
@@ -228,7 +217,6 @@ public class MainController {
       result.setGas(EXCLUDED_TEXT, DASH);
     }
 
-    // Values that were not calculated show as "—"
     result.setDetail("netWeight", weight(r.netWeightKg()));
     result.setDetail("netCost", money(r.netCost()));
     result.setDetail("grossWeight", weight(r.grossWeightKg()));
@@ -251,6 +239,8 @@ public class MainController {
     result.setSource(scope + origin);
   }
 
+  // Helpers
+
   private boolean isPriceModified(String materialName, double price) {
     for (Material m : repository.materials()) {
       if (m.name().equals(materialName) && m.pricePerKgEur() != null) {
@@ -260,13 +250,10 @@ public class MainController {
     return false;
   }
 
-  // ---------- Helpers ----------
-
   private static boolean isFilled(TextField field) {
     return field.getText() != null && !field.getText().isBlank();
   }
 
-  /** Reads a mandatory number. Accepts "1,5" and "1.5". */
   private static double required(TextField field, String name) {
     String text = field.getText() == null ? "" : field.getText().trim();
     if (text.isEmpty()) {
@@ -279,13 +266,11 @@ public class MainController {
     }
   }
 
-  /** Reads an optional number. Empty -> NaN. */
   private static double optional(TextField field, String name) {
     String text = field.getText() == null ? "" : field.getText().trim();
     return text.isEmpty() ? Double.NaN : required(field, name);
   }
 
-  /** 20.0 -> "20", 1.5 -> "1,5" */
   private static String plain(double value) {
     return BigDecimal.valueOf(value).stripTrailingZeros().toPlainString().replace('.', ',');
   }

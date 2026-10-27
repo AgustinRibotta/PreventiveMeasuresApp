@@ -4,22 +4,19 @@ import com.cosatcal.model.Parameters;
 import com.cosatcal.model.Part;
 import com.cosatcal.model.Thickness;
 
+/*
+ *Class responsible for performing all corresponding calculationns
+ */
 public final class CostCalculator {
 
   private CostCalculator() {
   }
 
-  /** Full calculation: material + machine + gas. */
   public static CostResult calculate(
       Part part, Parameters params, Thickness thickness, double pricePerKg) {
     return calculate(part, params, thickness, pricePerKg, true, true);
   }
 
-  /**
-   * Parts that are not requested are returned as NaN.
-   * withMaterial needs length, width and price; withMachine needs the cutting
-   * time.
-   */
   public static CostResult calculate(
       Part part, Parameters params, Thickness thickness, double pricePerKg,
       boolean withMaterial, boolean withMachine) {
@@ -42,11 +39,9 @@ public final class CostCalculator {
       double scrapFactor = 1 + params.scrapPct() / 100;
       double materialMarkup = 1 + params.materialMarkupPct() / 100;
 
-      // Net weight comes from the area; NaN if the area was left empty
       netWeight = Double.isNaN(part.areaMm2()) ? Double.NaN : part.areaMm2() * 1e-6 * kgM2;
       netCost = netWeight * pricePerKg;
 
-      // Gross weight comes from length x width
       double grossAreaM2 = (part.lengthMm() / 1000) * (part.widthMm() / 1000);
       grossWeight = grossAreaM2 * kgM2;
       grossCost = grossWeight * pricePerKg;
@@ -70,7 +65,6 @@ public final class CostCalculator {
       cuttingTime = part.cuttingTimeMin();
       machineCost = params.machineCostPerHourEur().doubleValue() * cuttingTime / 60;
 
-      // Gas: hourly cost = pack cost x consumption / pack volume
       gasHourlyCost = params.gasPackCostEur().doubleValue()
           * thickness.gasConsumptionM3h() / params.gasPackM3();
       gasCost = gasHourlyCost * cuttingTime / 60;

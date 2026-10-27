@@ -1,6 +1,5 @@
 package com.cosatcal.view;
 
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -9,7 +8,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 
 public class MainView extends BorderPane {
@@ -30,9 +28,6 @@ public class MainView extends BorderPane {
     body.setPadding(new Insets(10));
     setCenter(body);
 
-    // Temporary: remove when the controller feeds real data
-    // inputPanel.showSampleData();
-    // resultPanel.showSampleData();
   }
 
   private HBox buildHeader() {
@@ -41,22 +36,13 @@ public class MainView extends BorderPane {
 
     reloadButton.getStyleClass().add("ghost-button");
 
-    Button minimizeButton = new Button("–");
-    minimizeButton.getStyleClass().add("window-button");
-    minimizeButton.setOnAction(e -> ((Stage) getScene().getWindow()).setIconified(true));
-
-    Button closeButton = new Button("✕");
-    closeButton.getStyleClass().addAll("window-button", "close-button");
-    closeButton.setOnAction(e -> Platform.exit());
-
     Region spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);
 
-    HBox header = new HBox(8, title, spacer, reloadButton, minimizeButton, closeButton);
+    HBox header = new HBox(8, title, spacer, reloadButton);
     header.getStyleClass().add("header");
     header.setAlignment(Pos.CENTER_LEFT);
 
-    // Arrastrar la ventana desde el header
     header.setOnMousePressed(e -> {
       dragOffsetX = e.getSceneX();
       dragOffsetY = e.getSceneY();

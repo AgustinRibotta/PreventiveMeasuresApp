@@ -22,21 +22,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-/**
- * Lee CosatCal_dati.xlsx y guarda los datos en memoria.
- * Llamar a load() al arrancar y de nuevo en "Ricarica dati".
- *
- * Celda vacía = "sin dato":
- * - peso_kgm2 / consumo_gas_m3h vacíos -> Double.NaN
- * - prezzo vacío -> null
- */
 public class ExcelRepository {
 
-  // Hojas
+  // Data briught from the Execl file
   private static final String SHEET_PARAMETERS = "Parametri";
   private static final String SHEET_MATERIALS = "Materiali";
 
-  // Hoja Parametri
   private static final String COL_KEY = "chiave";
   private static final String COL_VALUE = "valore";
   private static final String P_SCRAP = "extra_sfrido";
@@ -46,11 +37,9 @@ public class ExcelRepository {
   private static final String P_PACK_COST = "costo_pacco";
   private static final String P_PACK_M3 = "pacco_gas_m3";
 
-  // Hoja Materiali
   private static final String COL_NAME = "nome";
   private static final String COL_PRICE = "prezzo";
 
-  // Hoja de cada material
   private static final String COL_THICKNESS = "spessore_mm";
   private static final String COL_CODE = "codice";
   private static final String COL_WEIGHT = "peso_kgm2";
@@ -69,10 +58,6 @@ public class ExcelRepository {
     this.file = file;
   }
 
-  /**
-   * Lee el Excel completo. Si falla lanza DataLoadException y
-   * los datos anteriores (si los hay) se mantienen intactos.
-   */
   public void load() {
     try (InputStream in = Files.newInputStream(file);
         Workbook workbook = WorkbookFactory.create(in)) {
@@ -88,7 +73,6 @@ public class ExcelRepository {
             material.name(), readThicknesses(table(workbook, material.name(), evaluator)));
       }
 
-      // Solo si todo salió bien se reemplazan los datos
       snapshot = new Snapshot(parameters, List.copyOf(materials), thicknesses);
 
     } catch (IOException e) {
@@ -104,7 +88,6 @@ public class ExcelRepository {
     return current().materials();
   }
 
-  /** Espesores de un material. Lista vacía si el material no existe. */
   public List<Thickness> thicknesses(String materialName) {
     return current().thicknesses().getOrDefault(materialName, List.of());
   }
@@ -116,8 +99,6 @@ public class ExcelRepository {
     }
     return s;
   }
-
-  // ---------- Lectura de cada hoja ----------
 
   private Parameters readParameters(Table table) {
     Map<String, BigDecimal> values = new HashMap<>();
@@ -168,8 +149,6 @@ public class ExcelRepository {
     return Collections.unmodifiableList(result);
   }
 
-  // ---------- Acceso a hojas y celdas ----------
-
   private static Table table(Workbook workbook, String sheetName, FormulaEvaluator evaluator) {
     Sheet sheet = workbook.getSheet(sheetName);
     if (sheet == null) {
@@ -180,10 +159,6 @@ public class ExcelRepository {
     return new Table(sheet, evaluator);
   }
 
-  /**
-   * Una hoja con encabezados en la primera fila. Las columnas se buscan por
-   * nombre.
-   */
   private static final class Table {
     private final Sheet sheet;
     private final FormulaEvaluator evaluator;
@@ -204,7 +179,6 @@ public class ExcelRepository {
       }
     }
 
-    /** Filas de datos, saltando las que tienen vacía la columna indicada. */
     List<Row> rows(String keyColumn) {
       List<Row> result = new ArrayList<>();
       for (int i = sheet.getFirstRowNum() + 1; i <= sheet.getLastRowNum(); i++) {
@@ -272,7 +246,6 @@ public class ExcelRepository {
               + ", colonna '" + column + "': '" + value + "' non è un numero.");
     }
 
-    /** Devuelve Double, String (sin espacios) o null si la celda está vacía. */
     private Object value(Cell cell) {
       if (cell == null) {
         return null;

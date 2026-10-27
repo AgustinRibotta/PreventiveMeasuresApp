@@ -17,27 +17,26 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.ScrollPane;
 
+/*
+ * Parameters and materials windows
+ */
 public class InputPanel extends VBox {
 
-  // Materiale
   private final ComboBox<String> materialCombo = new ComboBox<>();
   private final ComboBox<String> thicknessCombo = new ComboBox<>();
   private final Label infoLabel = new Label();
 
-  // Pezzo
   private final TextField lengthField = new TextField();
   private final TextField widthField = new TextField();
   private final TextField netAreaField = new TextField();
   private final TextField cuttingTimeField = new TextField();
 
-  // Parametri generali
   private final TextField extraSfridoField = new TextField();
   private final TextField machineCostField = new TextField();
   private final TextField extraMaterialField = new TextField();
   private final TextField extraGasField = new TextField();
   private final TextField packageCostField = new TextField();
 
-  // Costi materiali (vengono dall'Excel, l'utente può modificarli)
   private final Map<String, Double> excelCosts = new LinkedHashMap<>();
   private final Map<String, TextField> costFields = new LinkedHashMap<>();
   private final GridPane costsGrid = grid();
@@ -93,9 +92,6 @@ public class InputPanel extends VBox {
     getChildren().addAll(tabPane, calculateButton);
   }
 
-  // ---------- Costi materiali ----------
-
-  /** Carga los costos del Excel: nombre del material -> costo. */
   public void setMaterialCosts(Map<String, Double> costs) {
     excelCosts.clear();
     excelCosts.putAll(costs);
@@ -117,10 +113,6 @@ public class InputPanel extends VBox {
     }
   }
 
-  /**
-   * Costos para calcular: lo que escribió la persona, o el del Excel si está
-   * vacío/inválido.
-   */
   public Map<String, Double> materialCosts() {
     Map<String, Double> result = new LinkedHashMap<>();
     excelCosts.forEach((name, excelValue) -> {
@@ -137,8 +129,6 @@ public class InputPanel extends VBox {
       return null;
     }
   }
-
-  // ---------- Helpers ----------
 
   private Label sectionTitle(String text) {
     Label label = new Label(text);
@@ -194,7 +184,6 @@ public class InputPanel extends VBox {
     cuttingTimeField.setText("1,5");
   }
 
-  /** Wraps a tab's content so it scrolls vertically when it does not fit. */
   private ScrollPane scrollable(Node content) {
     ScrollPane scroll = new ScrollPane(content);
     scroll.setFitToWidth(true);
@@ -202,8 +191,6 @@ public class InputPanel extends VBox {
     scroll.getStyleClass().add("transparent-scroll");
     return scroll;
   }
-
-  // ---------- Accesores ----------
 
   public ComboBox<String> materialCombo() {
     return materialCombo;
