@@ -18,9 +18,18 @@ import java.util.Map;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 
+/**
+ * Connects the view, the ExcelRepository and CostCalculator.
+ * It does not read the Excel (ExcelRepository), do the mach (CostCalculator) or
+ * draw
+ * anything. It fills the screen with the loaded data, validates what the
+ * UserSessionEvent
+ * typed, decides what to calculate and show the result.
+ **/
+
 public class MainController {
 
-  // Errors message
+  // Message show to the user.
   private static final String MSG_NOT_LOADED = "I dati non sono stati caricati.";
   private static final String MSG_SELECT = "Seleziona materiale e spessore.";
   private static final String MSG_NO_PRICE = "Nessun prezzo per questo materiale.";
@@ -28,12 +37,11 @@ public class MainController {
   private static final String MSG_NO_GAS = "Nessun consumo di gas per questo spessore.";
   private static final String MSG_NOTHING_TO_CALCULATE = "Inserisci lunghezza e larghezza, il tempo di taglio, o tutti e tre.";
 
-  // Missing parameters
+  // Placeholders for values.
   private static final String NOT_AVAILABLE = "n/d";
   private static final String DASH = "—";
   private static final String EXCLUDED_TEXT = "Non incluso in questo calcolo";
 
-  // Views and input
   private final MainView view;
   private final InputPanel input;
   private final ResultPanel result;
@@ -57,6 +65,9 @@ public class MainController {
     reload();
   }
 
+  /*
+   * Reads the Exel again and refills the screen.
+   */
   private void reload() {
     try {
       repository.load();
@@ -112,13 +123,16 @@ public class MainController {
       return;
     }
     input.infoLabel().setText(
-        "Codice " + (t.code().isEmpty() ? NOT_AVAILABLE : t.code())
+        "Gas " + (t.gasUsage().isEmpty() ? NOT_AVAILABLE : t.gasUsage())
             + " · " + (Double.isNaN(t.weightKgM2()) ? NOT_AVAILABLE : plain(t.weightKgM2()))
             + " kg/m² · "
             + (Double.isNaN(t.gasConsumptionM3h()) ? NOT_AVAILABLE : plain(t.gasConsumptionM3h()))
             + " m³/h");
   }
 
+  /*
+   * Finds the Thickness matching the combo selection.
+   */
   private Thickness selectedThickness() {
     String material = input.materialCombo().getValue();
     String selected = input.thicknessCombo().getValue();
@@ -133,6 +147,9 @@ public class MainController {
     return null;
   }
 
+  /*
+   * Run CostCalculator
+   */
   private void calculate() {
     try {
       if (!loaded) {
@@ -188,6 +205,9 @@ public class MainController {
     }
   }
 
+  /*
+   * Write the CostResult into the result panel.
+   */
   private void show(CostResult r, Parameters p, boolean withMaterial, boolean withMachine,
       String materialName, Thickness thickness, double price) {
 

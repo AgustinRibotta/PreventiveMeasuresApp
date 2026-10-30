@@ -4,8 +4,13 @@ import com.cosatcal.model.Parameters;
 import com.cosatcal.model.Part;
 import com.cosatcal.model.Thickness;
 
-/*
- *Class responsible for performing all corresponding calculationns
+/**
+ * Calculates the cost of a part: material, machine and gas.
+ *
+ * It only works with the data it receives: it does not read files or touch the
+ * screen.
+ * The same input always gives the same result.
+ *
  */
 public final class CostCalculator {
 

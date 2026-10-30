@@ -41,7 +41,7 @@ public class ExcelRepository {
   private static final String COL_PRICE = "prezzo";
 
   private static final String COL_THICKNESS = "spessore_mm";
-  private static final String COL_CODE = "codice";
+  private static final String COL_GAS_USAGE = "gas";
   private static final String COL_WEIGHT = "peso_kgm2";
   private static final String COL_GAS = "consumo_gas_m3h";
 
@@ -136,13 +136,13 @@ public class ExcelRepository {
     List<Thickness> result = new ArrayList<>();
     for (Row row : table.rows(COL_THICKNESS)) {
       Double thickness = table.number(row, COL_THICKNESS);
-      String code = table.text(row, COL_CODE);
+      String gas_use = table.text(row, COL_GAS_USAGE);
       Double weight = table.number(row, COL_WEIGHT);
       Double gas = table.number(row, COL_GAS);
 
       result.add(new Thickness(
           thickness,
-          code == null ? "" : code,
+          gas_use == null ? "" : gas_use,
           weight == null ? Double.NaN : weight,
           gas == null ? Double.NaN : gas));
     }

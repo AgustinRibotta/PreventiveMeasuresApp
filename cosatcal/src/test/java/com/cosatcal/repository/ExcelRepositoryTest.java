@@ -71,13 +71,13 @@ class ExcelRepositoryTest {
     row(materials, 2, "Alluminio", null); // no price
 
     Sheet inox = wb.createSheet("Inox");
-    row(inox, 0, "spessore_mm", "codice", "peso_kgm2", "consumo_gas_m3h");
-    row(inox, 1, 1.0, "14301", 7.85, 24);
-    row(inox, 2, 2.0, "14301", 15.7, 24);
+    row(inox, 0, "spessore_mm", "gas", "peso_kgm2", "consumo_gas_m3h");
+    row(inox, 1, 1.0, "Azoto", 7.85, 24);
+    row(inox, 2, 2.0, "Azoto", 15.7, 24);
 
     Sheet aluminum = wb.createSheet("Alluminio");
-    row(aluminum, 0, "spessore_mm", "codice", "peso_kgm2", "consumo_gas_m3h");
-    row(aluminum, 1, 6.0, "AW5754", null, 72); // no weight
+    row(aluminum, 0, "spessore_mm", "gas", "peso_kgm2", "consumo_gas_m3h");
+    row(aluminum, 1, 6.0, "Azoto", null, 72); // no weight
 
     return wb;
   }
@@ -151,7 +151,7 @@ class ExcelRepositoryTest {
     List<Thickness> thicknesses = loadedRepository().thicknesses("Inox");
 
     assertEquals(2, thicknesses.size());
-    assertEquals(new Thickness(2.0, "14301", 15.7, 24.0), thicknesses.get(1));
+    assertEquals(new Thickness(2.0, "Azoto", 15.7, 24.0), thicknesses.get(1));
   }
 
   @Test
@@ -159,7 +159,7 @@ class ExcelRepositoryTest {
     Thickness t = loadedRepository().thicknesses("Alluminio").get(0);
 
     assertEquals(6.0, t.thicknessMm());
-    assertEquals("AW5754", t.code());
+    assertEquals("Azoto", t.gasUsage());
     assertTrue(Double.isNaN(t.weightKgM2()));
     assertEquals(72.0, t.gasConsumptionM3h());
   }
@@ -199,7 +199,7 @@ class ExcelRepositoryTest {
   @Test
   void textWhereNumberExpectedReportsSheetAndRow() throws IOException {
     XSSFWorkbook wb = validWorkbook();
-    row(wb.getSheet("Inox"), 2, 2.0, "14301", "abc", 24);
+    row(wb.getSheet("Inox"), 2, 2.0, "Azoto", "abc", 24);
     save(wb);
 
     DataLoadException e = assertThrows(DataLoadException.class, () -> new ExcelRepository(file).load());
