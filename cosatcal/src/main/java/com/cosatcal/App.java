@@ -22,14 +22,9 @@ public class App extends Application {
     stage.setScene(scene);
     stage.show();
 
-    // Created after show() so an error on the first load can display its alert
     new MainController(view, new ExcelRepository(excelPath()), EXCEL_NAME);
   }
 
-  /**
-   * Packaged app: the Excel sits next to CosatCal.exe.
-   * Run from Maven: the Excel is in the project folder, as before.
-   */
   private static Path excelPath() {
     String appPath = System.getProperty("jpackage.app-path");
     Path folder = appPath != null ? Path.of(appPath).getParent() : Path.of(".");

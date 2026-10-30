@@ -14,6 +14,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+/*
+ * Results windwos
+ */
 public class ResultPanel extends VBox {
 
   private final Label total = label("0,00 €", "total-bar-value");
@@ -34,7 +37,6 @@ public class ResultPanel extends VBox {
     VBox machine = block("MACCHINA", "block-machine", machineGrid());
     VBox gas = block("GAS", "block-gas", gasGrid());
 
-    // Macchina and Gas share the width equally
     for (VBox half : new VBox[] { machine, gas }) {
       half.setPrefWidth(100);
       half.setMaxWidth(Double.MAX_VALUE);
@@ -51,9 +53,6 @@ public class ResultPanel extends VBox {
     return label;
   }
 
-  // ---- Summary (top) ----
-
-  /** Dark bar with the grand total. */
   private HBox totalBar() {
     Label name = label("TOTALE", "total-bar-text");
 
@@ -73,7 +72,6 @@ public class ResultPanel extends VBox {
         summaryRow("Gas", "summary-gas", gasDetail, gasValue));
   }
 
-  /** Title and explanation on the left, value on the right, colored edge. */
   private HBox summaryRow(String title, String colorClass, Label detail, Label value) {
     detail.setWrapText(true);
     detail.setMaxWidth(Double.MAX_VALUE);
@@ -88,8 +86,6 @@ public class ResultPanel extends VBox {
     row.getStyleClass().addAll("summary-row", colorClass);
     return row;
   }
-
-  // ---- Boxes (bottom): data only ----
 
   private VBox block(String title, String colorClass, Node content) {
     Label name = label(title, "block-title");
@@ -186,8 +182,6 @@ public class ResultPanel extends VBox {
     grid.add(value, 1, row);
   }
 
-  // ---- API for the controller ----
-
   public void setTotal(String text) {
     total.setText(text);
   }
@@ -211,7 +205,6 @@ public class ResultPanel extends VBox {
     source.setText(text);
   }
 
-  /** Keys that are not shown (e.g. "total") are ignored. */
   public void setDetail(String key, String value) {
     Label target = detailValues.get(key);
     if (target != null) {

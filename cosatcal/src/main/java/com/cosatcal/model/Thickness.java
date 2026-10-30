@@ -1,3 +1,4 @@
 package com.cosatcal.model;
 
-public record Thickness(double thicknessMm, String code, double weightKgM2, double gasConsumptionM3h) {}
+public record Thickness(double thicknessMm, String gasUsage, double weightKgM2, double gasConsumptionM3h) {
+}
